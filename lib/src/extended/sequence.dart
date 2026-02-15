@@ -274,6 +274,7 @@ class BetweenInterval {
   /// the index 1 of [interval] is between index 1 and 2 of [step], and so on.
   ///
   ///
+  // ignore: unused_element
   static Lerper<T> _link<T>({
     required int totalStep,
     required Generator<T> step,

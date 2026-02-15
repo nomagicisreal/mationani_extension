@@ -18,3 +18,5 @@ pubspec.lock
 # others
 build/
 .build/
+macos/
+web/
