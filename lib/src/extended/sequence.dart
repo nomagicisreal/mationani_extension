@@ -15,8 +15,8 @@ part of '../../_mationani.dart';
 ///
 ///
 ///
-typedef AniSequencer<M extends Matable>
-    = Sequencer<AniSequenceStep, AniSequenceInterval, M>;
+typedef AniSequencer<M extends Matable> =
+    Sequencer<AniSequenceStep, AniSequenceInterval, M>;
 
 ///
 ///
@@ -80,32 +80,30 @@ final class AniSequence {
   static AniSequencer<Mamable> _sequencerOf(AniSequenceStyle style) =>
       switch (style) {
         AniSequenceStyle.transformTRS => (previous, next, interval) {
-            final curve = (interval.curves[0], interval.curves[0]);
-            return AniSequenceStyle._sequence(
-              previous: previous,
-              next: next,
-              combine: (begin, end) {
-                final a = begin.points3;
-                final b = end.points3;
-                return MamableSet(
-                  [
-                    MamableTransform.translation(
-                      translate: Between(begin: a[0], end: b[0], curve: curve),
-                      alignment: Alignment.topLeft,
-                    ),
-                    MamableTransform.rotation(
-                      rotate: Between(begin: a[1], end: b[1], curve: curve),
-                      alignment: Alignment.topLeft,
-                    ),
-                    MamableTransform.scale(
-                      scale: Between(begin: a[2], end: b[2], curve: curve),
-                      alignment: Alignment.topLeft,
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+          final curve = (interval.curves[0], interval.curves[0]);
+          return AniSequenceStyle._sequence(
+            previous: previous,
+            next: next,
+            combine: (begin, end) {
+              final a = begin.points3;
+              final b = end.points3;
+              return MamableSet([
+                MamableTransform.translation(
+                  translate: Between(begin: a[0], end: b[0], curve: curve),
+                  alignment: Alignment.topLeft,
+                ),
+                MamableTransform.rotation(
+                  rotate: Between(begin: a[1], end: b[1], curve: curve),
+                  alignment: Alignment.topLeft,
+                ),
+                MamableTransform.scale(
+                  scale: Between(begin: a[2], end: b[2], curve: curve),
+                  alignment: Alignment.topLeft,
+                ),
+              ]);
+            },
+          );
+        },
         AniSequenceStyle.transitionRotateSlideBezierCubic =>
           (previous, next, interval) {
             final curve = (interval.curves[0], interval.curves[0]);
@@ -114,20 +112,24 @@ final class AniSequence {
               previous: previous,
               next: next,
               combine: (begin, end) => MamableSet([
-                MamableTransition.rotate(Between(
-                  begin: begin.values[0],
-                  end: end.values[0],
-                  curve: curve,
-                )),
-                MamableTransition.slide(BetweenSpline2D(
-                  onLerp: BetweenSpline2D.lerpBezierCubic(
-                    begin: begin.offsets[0],
-                    end: end.offsets[0],
-                    c1: previous.offsets[0] + controlPoints[0],
-                    c2: previous.offsets[0] + controlPoints[1],
+                MamableTransition.rotate(
+                  Between(
+                    begin: begin.values[0],
+                    end: end.values[0],
+                    curve: curve,
                   ),
-                  curve: curve,
-                )),
+                ),
+                MamableTransition.slide(
+                  BetweenDepend(
+                    BetweenDepend.offsetBezierCubic(
+                      begin: begin.offsets[0],
+                      end: end.offsets[0],
+                      c1: previous.offsets[0] + controlPoints[0],
+                      c2: previous.offsets[0] + controlPoints[1],
+                    ),
+                    curve: curve,
+                  ),
+                ),
               ]),
             );
           },
@@ -183,9 +185,9 @@ enum AniSequenceStyle {
     required Fusionor<AniSequenceStep, Mamable> combine,
   }) =>
       (i) => combine(
-            predicator(i) ? previous : next,
-            predicator(i) ? next : previous,
-          );
+        predicator(i) ? previous : next,
+        predicator(i) ? next : previous,
+      );
 }
 
 ///

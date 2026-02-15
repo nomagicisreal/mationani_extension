@@ -9,7 +9,7 @@ part of '../../_mationani.dart';
 ///
 
 typedef OnAnimate<T, S> = S Function(T value);
-typedef OnAnimatePath<T> = SizingPath Function(T value);
+typedef OnAnimatePath = SizingPath Function(double t);
 
 ///
 ///
@@ -17,6 +17,8 @@ typedef OnAnimatePath<T> = SizingPath Function(T value);
 extension BetweenOffsetExtension on Between<Offset> {
   double get direction => end.direction - begin.direction;
 }
+
+// todo: migrate into mationani
 
 ///
 /// [animateStadium], [animateStadiumLine]
@@ -26,94 +28,88 @@ extension BetweenOffsetExtension on Between<Offset> {
 /// [BetweenPathOffset.linePolyFromGenerator]
 ///
 ///
-class BetweenPathOffset extends BetweenPath<Offset> {
-  BetweenPathOffset(
-    super.between, {
-    required super.onAnimate,
-    super.curve,
-  });
+class BetweenPathOffset extends BetweenDepend<SizingPath> {
+  BetweenPathOffset(super.onLerp, {super.curve});
 
-  static OnAnimatePath<Offset> animateStadium(
-      Offset o, double direction, double r) {
-    Offset topOf(Offset p) =>
-        p.direct(direction - DoubleExtension.radian_angle90, r);
-    Offset bottomOf(Offset p) =>
-        p.direct(direction + DoubleExtension.radian_angle90, r);
-    final oTop = topOf(o);
-    final oBottom = bottomOf(o);
+  static OnAnimatePath animateStadium(Between<Offset> between, double r) {
+    const r90 = DoubleExtension.radian_angle90;
+    final o = between.begin,
+        direction = between.direction,
+        oTop = o.direct(direction - r90, r),
+        oBottom = o.direct(direction + r90, r),
+        radius = Radius.circular(r),
+        transform = between.transform;
 
-    final radius = Radius.circular(r);
-    return (current) => (size) => Path()
-      ..arcFromStartToEnd(oBottom, oTop, radius: radius)
-      ..lineToPoint(topOf(current))
-      ..arcToPoint(bottomOf(current), radius: radius)
-      ..lineToPoint(oBottom);
+    // todo: prevent closure at every tick
+    return (t) {
+      final direct = transform(t).direct;
+      return (_) => Path()
+        ..arcFromStartToEnd(oBottom, oTop, radius: radius)
+        ..lineToPoint(direct(direction - r90, r))
+        ..arcToPoint(direct(direction + r90, r), radius: radius)
+        ..lineToPoint(oBottom);
+    };
   }
-
-  static OnAnimatePath<Offset> animateStadiumLine(
-          Between<Offset> between, double w) =>
-      animateStadium(between.begin, between.direction, w);
 
   ///
   /// constructor, factories
   ///
 
-// 'width' means stoke width
   BetweenPathOffset.line(
-    super.between,
-    double width, {
+    Between<Offset> between,
+    double strokeWidth, {
     super.curve,
     StrokeCap strokeCap = StrokeCap.round,
-  })  : assert(strokeCap == StrokeCap.round),
-        super(onAnimate: animateStadiumLine(between, width));
+  }) : assert(strokeCap == StrokeCap.round),
+       super(animateStadium(between, strokeWidth));
 
-// // 'width' means stoke width
-//   factory BetweenPathOffset.linePoly(
-//     double width, {
-//     required List<Offset> nodes,
-//     CurveFR? curve,
-//   }) {
-//     final length = nodes.length;
-//     final intervals = List.generate(length, (index) => (index + 1) / length);
-//     final between = MationaniSequence.between(steps: nodes, curve: curve);
-//
-//     int i = 0;
-//     double bound = intervals[i];
-//     OnAnimatePath<Offset> lining(Offset a, Offset b) =>
-//         animateStadium(a, b.direction - a.direction, width);
-//     OnAnimatePath<Offset> drawing = lining(nodes[0], nodes[1]);
-//     SizingPath draw = FSizingPath.circle(nodes[0], width);
-//
-//     return BetweenPathOffset(
-//       between,
-//       onAnimate: (current) {
-//         if (t > bound) {
-//           i++;
-//           bound = intervals[i];
-//           drawing = i == length - 1 ? drawing : lining(nodes[i], nodes[i + 1]);
-//         }
-//         draw = draw.combine(drawing(current));
-//         return draw;
-//       },
-//       curve: curve,
-//     );
-//   }
-//
-//   factory BetweenPathOffset.linePolyFromGenerator(
-//     double width, {
-//     required int totalStep,
-//     required Generator<Offset> step,
-//     required Generator<BetweenInterval> interval,
-//     CurveFR? curve,
-//   }) {
-//     // final offset = Between.sequenceFromGenerator(
-//     //   totalStep: totalStep,
-//     //   step: step,
-//     //   interval: interval,
-//     //   curve: curve,
-//     // );
-//     throw UnimplementedError();
-//   }
+  // // 'width' means stoke width
+  //   factory BetweenPathOffset.linePoly(
+  //     double width, {
+  //     required List<Offset> nodes,
+  //     CurveFR? curve,
+  //   }) {
+  //     final length = nodes.length;
+  //     final intervals = List.generate(length, (index) => (index + 1) / length);
+  //     final between = MationaniSequence.between(steps: nodes, curve: curve);
+  //
+  //     int i = 0;
+  //     double bound = intervals[i];
+  //     OnAnimatePath<Offset> lining(Offset a, Offset b) =>
+  //         animateStadium(a, b.direction - a.direction, width);
+  //     OnAnimatePath<Offset> drawing = lining(nodes[0], nodes[1]);
+  //     SizingPath draw = FSizingPath.circle(nodes[0], width);
+  //
+  //     return BetweenPathOffset(
+  //       between,
+  //       onAnimate: (current) {
+  //         if (t > bound) {
+  //           i++;
+  //           bound = intervals[i];
+  //           drawing = i == length - 1 ? drawing : lining(nodes[i], nodes[i + 1]);
+  //         }
+  //         draw = draw.combine(drawing(current));
+  //         return draw;
+  //       },
+  //       curve: curve,
+  //     );
+  //   }
+  //
+  //   factory BetweenPathOffset.linePolyFromGenerator(
+  //     double width, {
+  //     required int totalStep,
+  //     required Generator<Offset> step,
+  //     required Generator<BetweenInterval> interval,
+  //     CurveFR? curve,
+  //   }) {
+  //     // final offset = Between.sequenceFromGenerator(
+  //     //   totalStep: totalStep,
+  //     //   step: step,
+  //     //   interval: interval,
+  //     //   curve: curve,
+  //     // );
+  //     throw UnimplementedError();
+  //   }
 }
 
 // class _BetweenPathConcurrent<T> extends BetweenPath<List<T>> {

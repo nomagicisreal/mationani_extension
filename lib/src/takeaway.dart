@@ -109,22 +109,21 @@ abstract final class FMatable {
 
   static MamableSet mamableSet_penetrate({
     double opacityShowing = 1.0,
-    BiCurve? curveClip,
+    BiCurve? curve,
     Clip clip = Clip.hardEdge,
     required Between<double> fading,
     required Between<Rect> recting,
     required SizingPathFrom<Rect> sizingPathFrom,
-  }) => MamableSet([
-    MamableTransition.fade(fading),
-    MamableClipper(
-      clipBehavior: clip,
-      BetweenPath<Rect>(
-        recting,
-        onAnimate: (rect) => sizingPathFrom(rect),
-        curve: curveClip,
+  }) {
+    final transform = recting.transform;
+    return MamableSet([
+      MamableTransition.fade(fading),
+      MamableClipper(
+        clipBehavior: clip,
+        BetweenDepend((t) => sizingPathFrom(transform(t)), curve: curve),
       ),
-    ),
-  ]);
+    ]);
+  }
 
   ///
   /// [mamableSet_drift]
