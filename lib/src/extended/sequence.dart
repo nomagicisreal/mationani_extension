@@ -1,4 +1,4 @@
-part of '../../_mationani.dart';
+part of '../../mationani_extension.dart';
 
 ///
 ///
@@ -304,3 +304,68 @@ class BetweenInterval {
   ) =>
       (_) => Between(begin: previous, end: next, curve: null);
 }
+
+
+// todo: migrate into mationani
+
+///
+///
+/// * [BetweenOffsetExtension]
+///
+///
+extension BetweenOffsetExtension on Between<Offset> {
+  double get direction {
+    final begin = this.begin, end = this.end;
+    return math.atan2(end.dy - begin.dy, end.dx - begin.dx);
+  }
+
+  double get distance {
+    final begin = this.begin,
+        end = this.end,
+        dx = end.dx - begin.dx,
+        dy = end.dy - begin.dy;
+    return math.sqrt(dx * dx + dy * dy);
+  }
+}
+
+
+///
+///
+///
+// factory BetweenPath.linePoly(
+//   double width, {
+//   required List<Offset> nodes,
+//   BiCurve? curve,
+//   StrokeCap strokeCap = StrokeCap.round,
+// }) {
+//   assert(strokeCap != StrokeCap.square);
+//   final length = nodes.length;
+//   final intervals = List.generate(length, (index) => (index + 1) / length);
+//   final between = MationaniSequence.between(steps: nodes, curve: curve);
+//
+//   int i = 0;
+//   double bound = intervals[i];
+//   Lerper<Path> lining(Offset a, Offset b) => _line(a, b, width, strokeCap);
+//   Lerper<Path> drawing = lining(nodes[0], nodes[1]);
+//   SizingPath draw = FSizingPath.circle(nodes[0], width);
+//
+//   return BetweenPath((t) {
+//     if (t > bound) {
+//       i++;
+//       bound = intervals[i];
+//       drawing = i == length - 1 ? drawing : lining(nodes[i], nodes[i + 1]);
+//     }
+//     draw = draw.combine(drawing(current));
+//     return draw;
+//   }, curve: curve);
+// }
+
+// factory BetweenPath.linePolyFromGenerator(
+//   double width, {
+//   required int totalStep,
+//   required Generator<Offset> step,
+//   required Generator<BetweenInterval> interval,
+//   BiCurve? curve,
+// }) {
+//   throw UnimplementedError();
+// }

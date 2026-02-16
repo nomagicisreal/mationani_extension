@@ -1,4 +1,4 @@
-part of '../../_mationani.dart';
+part of '../../mationani_extension.dart';
 
 ///
 /// [AniFromUpdater], [AniUpdaterCommand]
