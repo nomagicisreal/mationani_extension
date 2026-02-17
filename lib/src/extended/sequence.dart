@@ -7,25 +7,55 @@ part of '../../mationani_extension.dart';
 /// * [AniSequenceInterval]
 /// * [AniSequenceStyle]
 ///
-/// * [MationaniSequence]
-/// * [BetweenInterval]
 ///
-///
+
+// todo: migrate into mationani
 
 ///
 ///
 ///
 typedef AniSequencer<M extends Matable> =
-    Sequencer<AniSequenceStep, AniSequenceInterval, M>;
+    Mapper<int, M> Function(
+      AniSequenceStep previous,
+      AniSequenceStep next,
+      AniSequenceInterval interval,
+    );
+
+///
+///
+final class AniSequenceStep {
+  final List<double> values;
+  final List<Offset> offsets;
+  final List<(double, double, double)> points3;
+
+  const AniSequenceStep({
+    this.values = const [],
+    this.offsets = const [],
+    this.points3 = const [],
+  });
+}
+
+final class AniSequenceInterval {
+  final Duration duration;
+  final List<Curve> curves;
+  final List<Offset> offsets; // for curving control, interval step
+
+  const AniSequenceInterval({
+    this.duration = DurationExtension.second1,
+    required this.curves,
+    this.offsets = const [],
+  });
+}
+
 
 ///
 ///
 ///
 final class AniSequence {
-  final List<Mamable> abilities;
   final List<Duration> durations;
+  final List<Mamable> mamables;
 
-  const AniSequence._(this.abilities, this.durations);
+  const AniSequence._(this.mamables, this.durations);
 
   factory AniSequence({
     required int totalStep,
@@ -72,7 +102,7 @@ final class AniSequence {
         duration: sequence.durations[i],
         initializer: initializer,
       ),
-      mamable: sequence.abilities[i],
+      mamable: sequence.mamables[i],
       child: child,
     );
   }
@@ -138,34 +168,6 @@ final class AniSequence {
 
 ///
 ///
-final class AniSequenceStep {
-  final List<double> values;
-  final List<Offset> offsets;
-  final List<(double, double, double)> points3;
-
-  const AniSequenceStep({
-    this.values = const [],
-    this.offsets = const [],
-    this.points3 = const [],
-  });
-}
-
-///
-///
-final class AniSequenceInterval {
-  final Duration duration;
-  final List<Curve> curves;
-  final List<Offset> offsets; // for curving control, interval step
-
-  const AniSequenceInterval({
-    this.duration = DurationExtension.second1,
-    required this.curves,
-    this.offsets = const [],
-  });
-}
-
-///
-///
 enum AniSequenceStyle {
   // TRS: Translation, Rotation, Scaling
   transformTRS,
@@ -189,145 +191,6 @@ enum AniSequenceStyle {
         predicator(i) ? next : previous,
       );
 }
-
-///
-///
-///
-abstract final class MationaniSequence {
-  // static Between<T> between<T>({
-  //   BetweenInterval weight = BetweenInterval.linear,
-  //   BiCurve? curve,
-  //   required List<T> steps,
-  // }) =>
-  //     Between(
-  //       begin: steps.first,
-  //       end: steps.last,
-  //       onLerp: BetweenInterval._link(
-  //         totalStep: steps.length,
-  //         step: (i) => steps[i],
-  //         interval: (i) => weight,
-  //       ),
-  //       curve: curve,
-  //     );
-  //
-  // static Between<T> between_generator<T>({
-  //   required int totalStep,
-  //   required Generator<T> step,
-  //   required Generator<BetweenInterval> interval,
-  //   BiCurve? curve,
-  //   Sequencer<T, Lerper<T>, Between<T>>? sequencer,
-  // }) =>
-  //     Between(
-  //       begin: step(0),
-  //       end: step(totalStep - 1),
-  //       onLerp: BetweenInterval._link(
-  //         totalStep: totalStep,
-  //         step: step,
-  //         interval: interval,
-  //         sequencer: sequencer,
-  //       ),
-  //       curve: curve,
-  //     );
-  //
-  // static Between<T> outAndBack<T>({
-  //   required T begin,
-  //   required T target,
-  //   BiCurve? curve,
-  //   double ratio = 1.0,
-  //   Curve curveOut = Curves.fastOutSlowIn,
-  //   Curve curveBack = Curves.fastOutSlowIn,
-  //   Sequencer<T, Lerper<T>, Between<T>>? sequencer,
-  // }) =>
-  //     Between(
-  //       begin: begin,
-  //       end: begin,
-  //       onLerp: BetweenInterval._link(
-  //         totalStep: 3,
-  //         step: (i) => i == 1 ? target : begin,
-  //         interval: (i) => i == 0
-  //             ? BetweenInterval(ratio, curve: curveOut)
-  //             : BetweenInterval(1 / ratio, curve: curveBack),
-  //         sequencer: sequencer,
-  //       ),
-  //       curve: curve,
-  //     );
-}
-
-///
-///
-///
-class BetweenInterval {
-  final double weight;
-  final Curve curve;
-
-  Lerper<T> lerp<T>(T a, T b) {
-    final curving = curve.transform;
-    final onLerp = Between<T>(begin: a, end: b).transform;
-    return (t) => onLerp(curving(t));
-  }
-
-  const BetweenInterval(this.weight, {this.curve = Curves.linear});
-
-  static const BetweenInterval linear = BetweenInterval(1);
-
-  ///
-  ///
-  /// the index 0 of [interval] is between index 0 and 1 of [step]
-  /// the index 1 of [interval] is between index 1 and 2 of [step], and so on.
-  ///
-  ///
-  // ignore: unused_element
-  static Lerper<T> _link<T>({
-    required int totalStep,
-    required Generator<T> step,
-    required Generator<BetweenInterval> interval,
-    Sequencer<T, Lerper<T>, Between<T>>? sequencer,
-  }) {
-    final seq = sequencer ?? _sequencer<T>;
-    var i = -1;
-    return TweenSequence(
-      step.linkToListTill(
-        totalStep,
-        interval,
-        (previous, next, interval) => TweenSequenceItem<T>(
-          tween: seq(previous, next, interval.lerp(previous, next))(++i),
-          weight: interval.weight,
-        ),
-      ),
-    ).transform;
-  }
-
-  static Mapper<int, Between<T>> _sequencer<T>(
-    T previous,
-    T next,
-    Lerper<T> onLerp,
-  ) =>
-      (_) => Between(begin: previous, end: next, curve: null);
-}
-
-
-// todo: migrate into mationani
-
-///
-///
-/// * [BetweenOffsetExtension]
-///
-///
-extension BetweenOffsetExtension on Between<Offset> {
-  double get direction {
-    final begin = this.begin, end = this.end;
-    return math.atan2(end.dy - begin.dy, end.dx - begin.dx);
-  }
-
-  double get distance {
-    final begin = this.begin,
-        end = this.end,
-        dx = end.dx - begin.dx,
-        dy = end.dy - begin.dy;
-    return math.sqrt(dx * dx + dy * dy);
-  }
-}
-
 
 ///
 ///
@@ -360,12 +223,17 @@ extension BetweenOffsetExtension on Between<Offset> {
 //   }, curve: curve);
 // }
 
-// factory BetweenPath.linePolyFromGenerator(
-//   double width, {
-//   required int totalStep,
-//   required Generator<Offset> step,
-//   required Generator<BetweenInterval> interval,
-//   BiCurve? curve,
-// }) {
-//   throw UnimplementedError();
+// extension BetweenOffsetExtension on Between<Offset> {
+//   double get direction {
+//     final begin = this.begin, end = this.end;
+//     return math.atan2(end.dy - begin.dy, end.dx - begin.dx);
+//   }
+//
+//   double get distance {
+//     final begin = this.begin,
+//         end = this.end,
+//         dx = end.dx - begin.dx,
+//         dy = end.dy - begin.dy;
+//     return math.sqrt(dx * dx + dy * dy);
+//   }
 // }
