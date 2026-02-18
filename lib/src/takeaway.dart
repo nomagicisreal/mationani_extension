@@ -17,25 +17,25 @@ abstract final class FMatalue {
   ///
   ///
   static Between<double> between_double_0From(double begin, [BiCurve? curve]) =>
-      Between(begin: begin, end: 0, curve: curve);
+      Between(begin, 0, curve);
 
   static Between<double> between_double_0To(double end, [BiCurve? curve]) =>
-      Between(begin: 0, end: end, curve: curve);
+      Between(0, end, curve);
 
   static Between<double> between_double_1From(double begin, [BiCurve? curve]) =>
-      Between(begin: begin, end: 1, curve: curve);
+      Between(begin, 1, curve);
 
   static Between<double> between_double_1To(double end, [BiCurve? curve]) =>
-      Between(begin: 1, end: end, curve: curve);
+      Between(1, end, curve);
 
   ///
   ///
   ///
   static Between<Offset> between_offset_0From(Offset begin, [BiCurve? curve]) =>
-      Between(begin: begin, end: Offset.zero, curve: curve);
+      Between(begin, Offset.zero, curve);
 
   static Between<Offset> between_offset_0To(Offset end, [BiCurve? curve]) =>
-      Between(begin: Offset.zero, end: end, curve: curve);
+      Between(Offset.zero, end, curve);
 
   static Between<Offset> between_offset_ofDirection(
     double direction,
@@ -43,9 +43,9 @@ abstract final class FMatalue {
     double end, [
     BiCurve? curve,
   ]) => Between(
-    begin: Offset.fromDirection(direction, begin),
-    end: Offset.fromDirection(direction, end),
-    curve: curve,
+    Offset.fromDirection(direction, begin),
+    Offset.fromDirection(direction, end),
+    curve,
   );
 
   static Between<Offset> between_offset_ofDirection0From(
@@ -66,12 +66,12 @@ abstract final class FMatalue {
   static Between<(double, double, double)> between_double3_0From(
     (double, double, double) begin, [
     BiCurve? curve,
-  ]) => Between(begin: begin, end: zeroDouble3, curve: curve);
+  ]) => Between(begin, zeroDouble3, curve);
 
   static Between<(double, double, double)> between_double3_0To(
     (double, double, double) end, [
     BiCurve? curve,
-  ]) => Between(begin: zeroDouble3, end: end, curve: curve);
+  ]) => Between(zeroDouble3, end, curve);
 
   static const (double, double, double) zeroDouble3 = (0, 0, 0);
 }
@@ -118,9 +118,9 @@ abstract final class FMatable {
     final transform = recting.transform;
     return MamableSet([
       MamableTransition.fade(fading),
-      MamableClipper(
-        clipBehavior: clip,
+      MamableClip.pathAdjust(
         BetweenDepend((t) => sizingPathFrom(transform(t)), curve: curve),
+        clipBehavior: clip,
       ),
     ]);
   }
@@ -202,24 +202,16 @@ abstract final class FMatable {
     BiCurve curveSlide = (Curves.linear, Curves.linear),
   }) => MamableSet([
     MamableTransition.slide(
-      Between(
-        begin: Offset.zero,
-        end: destination,
-        curve: (
-          curveSlide.$1.interval(0, interval),
-          curveSlide.$2.interval(0, interval),
-        ),
-      ),
+      Between(Offset.zero, destination, (
+        curveSlide.$1.interval(0, interval),
+        curveSlide.$2.interval(0, interval),
+      )),
     ),
     MamableTransition.scale(
-      Between(
-        begin: 1.0,
-        end: scaleEnd,
-        curve: (
-          curveSlide.$1.interval(interval, 1),
-          curveSlide.$2.interval(interval, 1),
-        ),
-      ),
+      Between(1.0, scaleEnd, (
+        curveSlide.$1.interval(interval, 1),
+        curveSlide.$2.interval(interval, 1),
+      )),
       alignment: Alignment.center,
     ),
   ]);
@@ -235,7 +227,7 @@ abstract final class FMatable {
   }) {
     final interval = 1 / total;
     return (index) => FMatable.mamableSet_spill(
-      fading: Between(begin: 0.0, end: 1.0, curve: curve),
+      fading: Between(0.0, 1.0, curve),
       sliding: FMatalue.between_offset_ofDirection(
         direction(index),
         0,
