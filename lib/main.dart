@@ -53,3 +53,18 @@ class _MyHomeState extends State<MyHome> {
     );
   }
 }
+
+// extension BetweenOffsetExtension on Between<Offset> {
+//   double get direction {
+//     final begin = this.begin, end = this.end;
+//     return math.atan2(end.dy - begin.dy, end.dx - begin.dx);
+//   }
+//
+//   double get distance {
+//     final begin = this.begin,
+//         end = this.end,
+//         dx = end.dx - begin.dx,
+//         dy = end.dy - begin.dy;
+//     return math.sqrt(dx * dx + dy * dy);
+//   }
+// }

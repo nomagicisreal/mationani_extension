@@ -1,4 +1,4 @@
-part of '../../mationani_extension.dart';
+part of '../mationani_extension.dart';
 
 ///
 /// [PlanesComposerCombiner]
